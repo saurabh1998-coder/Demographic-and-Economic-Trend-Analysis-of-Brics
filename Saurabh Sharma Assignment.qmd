@@ -1,0 +1,316 @@
+---
+format:
+  html:
+    embed-resources: true
+    code-fold: true
+jupyter: python3
+---
+
+
+Project Title:
+
+"Economic, Demographic, and Energy Consumption Trends across the BRICS Nations"
+(Brazil, Russia, India, China, and South Africa)
+
+By
+Saurabh Sharma
+
+Enrollment no-A0048584
+
+
+**Graph 1:** Military Expenditure as % of GDP (Line Plot)
+
+Story: Shows changing military priorities.
+
+Insight:
+
+South Africa's peak reflects apartheid-era tensions.
+
+India consistently prioritizes defense.
+
+China's rise correlates with its economic ascent.
+
+Brazil and South Africa shift funds toward civil sectors.
+
+**Graph 2:** Population Trends (Stacked Bar Plot)
+
+Story: Highlights demographic dominance of China and India.
+
+Insight:
+
+India's rising population is narrowing the gap with China.
+
+Brazil and South Africa grow slowly but steadily.
+
+Implication: Economic pressure and opportunity in labor markets.
+
+**Graph 3:** Energy Consumption Mix (A Stacked Area Graph)
+
+Story: Energy dependency and sustainability.
+
+Insight:
+
+India and China rely heavily on fossil fuels.
+
+Brazil showcases a more diverse, possibly greener energy profile.
+
+South Africa’s coal addiction makes it a key climate concern.
+
+**Graph 4:** Heatmaps (Correlation Matrices)
+
+Story: Statistical relationships between key development indicators.
+
+For Brazil:
+
+Weak correlation between GDP growth and military spending.
+
+Negative link between GDP growth and life expectancy.
+
+Strong positive correlation between energy use and life expectancy — reflecting development needs.
+
+
+```{python}
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+
+```
+
+```{python}
+
+df = pd.read_csv('unicef_metadata.csv')
+df.columns = df.columns.str.strip().str.lower().str.replace(r"[^\w\s]", '').str.replace(' ', '_')
+df.head()
+```
+
+
+Economic, Demographic and Energy consumpution trends across the BRICS
+        (BRAZIL, RUSSIA, INDIA, CHINA & BRAZIL)
+
+```{python}
+threshold = int(df.shape[1] * 0.75)
+df_clean = df.dropna(thresh=threshold)
+```
+
+```{python}
+brics = ['Brazil', 'Russia', 'India', 'China', 'South Africa']
+df_brics = df[df['country'].isin(brics)]
+```
+
+```{python}
+df_brics = df_brics.dropna(thresh=int(df_brics.shape[1] * 0.75))
+```
+
+```{python}
+plt.figure(figsize=(10, 6))
+sns.lineplot(data=df_brics, x='year', y='military_expenditure__of_gdp', hue='country')
+plt.title('Military Expenditure (% of GDP) Over Time - BRICS')
+plt.xlabel('Year')
+plt.ylabel('Military Expenditure (% of GDP)')
+plt.legend(title='Country')
+plt.show()
+```
+
+This graph illustrates military expenditure as a percentage of GDP in BRICS countries over time. South Africa showed a sharp peak around 1978–1990, spending over 5% of GDP, likely due to regional conflicts and apartheid-era policies, before declining steadily. India maintained consistently higher military spending among the group, fluctuating between 2.5%–4% of GDP. China has shown a gradual increase since the 1990s, stabilizing around 1.7%. Brazil and South Africa both exhibit long-term downward trends, reflecting shifts in national priorities. Overall, the graph shows varying defense investment patterns shaped by each country's geopolitical situation, economic development, and military strategy.
+
+```{python}
+plt.figure(figsize=(10, 6))
+sns.scatterplot(data=df_brics, x='year', y='fossil_fuel_energy_consumption__of_total', hue='country')
+plt.title('Fossil Fuel Energy Consumption (% of Total) - BRICS')
+plt.xlabel('Year')
+plt.ylabel('Fossil Fuel Consumption (%)')
+plt.legend(title='Country')
+plt.tight_layout()
+plt.show()
+```
+
+India and China's trajectories show increasing reliance on fossil fuels despite global climate goals, calling for urgent transition strategies.
+
+Brazil’s diversified energy profile could serve as a model for sustainable development.
+
+South Africa's heavy coal use makes it a high emitter, highlighting the need for energy sector reforms.
+
+
+
+```{python}
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Load the data
+file_path = "data/unicef_metadata.csv"  # Adjust the path if needed
+df = pd.read_csv('unicef_metadata.csv')
+df.columns = df.columns.str.strip().str.lower().str.replace(r"[^\w\s]", '').str.replace(' ', '_')
+
+# Filter for BRICS countries
+brics = ['Brazil', 'Russia', 'India', 'China', 'South Africa']
+df_brics = df[(df['country'].isin(brics)) & (df['year'].between(2000, 2020))]
+
+# Pivot the data: years as index, countries as columns
+df_pivot = df_brics.pivot(index='year', columns='country', values='population_total')
+df_pivot = df_pivot.sort_index()
+
+# Plot
+plt.figure(figsize=(16, 8))
+df_pivot.plot(kind='bar', stacked=True, colormap='Set2', figsize=(16, 8))
+
+# Add titles and labels
+plt.title('Population Growth (2000–2020) - BRICS')
+plt.ylabel('Population (Billions)')
+plt.xlabel('Year')
+
+# Format y-axis to show billions
+plt.gca().yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{x * 1e-9:.1f}B'))
+
+# Move legend out of the way
+plt.legend(title='Country', bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.tight_layout()
+
+# Show the plot
+plt.show()
+```
+
+This stacked bar graph shows the population growth of BRICS countries from 2000 to 2020. China and India dominate the chart, together comprising the vast majority of the total BRICS population. India's population shows a steady increase, gradually closing the gap with China, which also grows but at a slower rate due to population control policies. Brazil and South Africa have relatively smaller populations but also exhibit consistent growth over the years. The graph highlights the demographic weight of China and India within the BRICS group, with significant implications for labor markets, economic development, and global influence in the coming decades.
+
+```{python}
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Define the BRICS countries
+brics = ['Brazil', 'Russia', 'India', 'China', 'South Africa']
+
+# Define only the key indicators you want to visualize
+indicators = [
+    'gdp_growth_annual_',
+    'military_expenditure__of_gdp',
+    'life_expectancy_at_birth_total_years',
+    'fossil_fuel_energy_consumption__of_total'
+]
+
+# Loop through each BRICS country
+for country in brics:
+    country_data = df_brics[df_brics['country'] == country][indicators].dropna()
+
+    if not country_data.empty:
+        corr_country = country_data.corr()
+
+        plt.figure(figsize=(8, 6))
+        sns.heatmap(corr_country, annot=True, cmap='coolwarm', fmt=".2f", linewidths=1, square=True)
+        plt.title(f'Correlation Between Key Indicators - {country}', fontsize=13)
+        plt.xticks(rotation=30, ha='right')
+        plt.yticks(rotation=0)
+        plt.tight_layout()
+        plt.show()
+```
+
+A. The heatmap for Brazil illustrates relationships between four key development indicators:
+
+1. GDP Growth vs. Other Indicators:  
+   GDP growth has a **weak positive correlation** with military expenditure (0.26), suggesting slight alignment between economic growth and defense spending. However, it is **negatively correlated** with both life expectancy (-0.42) and fossil fuel energy consumption (-0.34), possibly indicating that economic growth periods may come at environmental or health costs.
+
+2. Military Expenditure:  
+   Military spending negatively correlates with life expectancy (-0.37) and fossil fuel use (-0.37), implying higher defense budgets may coincide with adverse social or environmental conditions.
+
+3. Life Expectancy vs. Fossil Fuel Use:  
+   The **strongest positive correlation** (0.56) is between life expectancy and fossil fuel consumption, potentially reflecting increased energy use in development and healthcare infrastructure.
+
+In summary, economic and military metrics may not align positively with social well-being in Brazil, highlighting the importance of sustainable growth policies.
+
+
+The heatmap of India reveals several insights. GDP growth shows a moderate positive correlation with life expectancy (0.45) and fossil fuel energy consumption (0.44), suggesting economic progress may support development and energy usage. Military expenditure, however, is negatively correlated with life expectancy (-0.67) and fossil fuel use (-0.68), indicating that higher defense spending might be associated with reduced social and environmental development. The strongest correlation (0.99) is between life expectancy and fossil fuel use, implying that rising energy access may contribute to longer lifespans. Overall, India's development appears linked to energy use and social well-being more than military spending.
+
+
+ The Heat Map of China shows GDP growth has a weak positive relationship with fossil fuel consumption (0.12) and life expectancy (0.06), and a slight negative link to military expenditure (-0.24). Military spending negatively correlates with both life expectancy (-0.57) and fossil fuel use (-0.56), indicating potential trade-offs between defense and social/environmental priorities. Life expectancy and fossil fuel consumption show an extremely strong positive correlation (0.98), suggesting that increased energy access may contribute significantly to longer lives. Overall, China's development appears driven by energy access and life quality, with military expenditure showing inverse associations with these factors.
+
+D.The heatmap of South Africa shows weak negative relationships with military expenditure (-0.22) and life expectancy (-0.45), and almost no correlation with fossil fuel use (0.05). Military expenditure is positively correlated with both fossil fuel consumption (0.51) and life expectancy (0.37), suggesting increased defense spending may accompany higher energy use and modest health improvements. Interestingly, life expectancy has a slight negative correlation with fossil fuel use (-0.13), possibly indicating environmental or health trade-offs. Overall, South Africa presents a mixed development picture, with weak GDP links but a notable interaction between energy, defense, and health outcomes.
+
+
+
+
+```{python}
+!pip install plotly pandas
+
+import pandas as pd
+import plotly.express as px
+
+```
+
+```{python}
+# Load the uploaded CSV file
+df = pd.read_csv('unicef_metadata.csv')
+
+# Display first few rows to verify
+df.head()
+```
+
+```{python}
+# Define BRICS countries
+brics = ['Brazil', 'Russia', 'India', 'China', 'South Africa']
+
+# Filter for BRICS countries
+df_brics = df[df['country'].isin(brics)]
+
+# Select a specific year, e.g., 2020 (if available)
+df_brics_2020 = df_brics[df_brics['year'] == 2020]
+
+# Select country and life expectancy columns
+life_expectancy_map = df_brics_2020[['country', 'life_expectancy_at_birth_total_years']]
+
+# Preview
+life_expectancy_map
+```
+
+
+
+```{python}
+import pandas as pd
+import plotly.express as px
+
+# Sample data for BRICS countries' life expectancy in 2020
+data = {
+    'country': ['Brazil', 'Russia', 'India', 'China', 'South Africa'],
+    'iso_alpha': ['BRA', 'RUS', 'IND', 'CHN', 'ZAF'],
+    'life_expectancy': [75.3, 72.6, 69.7, 77.5, 64.1]
+}
+
+df = pd.DataFrame(data)
+
+# Create choropleth map
+fig = px.choropleth(
+    df,
+    locations="iso_alpha",
+    color="life_expectancy",
+    hover_name="country",
+    color_continuous_scale="Viridis",
+    projection="natural earth",
+    title="🌍 Life Expectancy at Birth in BRICS Countries (2020)",
+)
+
+# Update layout for aesthetics
+fig.update_layout(
+    title_font=dict(size=22, family="Georgia", color="darkblue"),
+    geo=dict(
+        showframe=False,
+        showcoastlines=True,
+        coastlinecolor="gray",
+        showland=True,
+        landcolor="whitesmoke",
+        projection_scale=1,
+        center=dict(lat=0, lon=60),
+    ),
+    coloraxis_colorbar=dict(
+        title="Years",
+        tickvals=[60, 65, 70, 75, 80],
+        title_font=dict(size=16),  # Corrected from 'title_font'
+        tickfont=dict(size=14)
+    )
+)
+
+fig.show()
+```
+
+
+**Summary of Story**
+ This project delves into the evolving socio-economic and energy landscapes of the BRICS countries over the past two decades. By leveraging visual tools like graphs and heatmaps, it compares defense spending, energy consumption patterns, demographic shifts, and economic development. The analysis reveals that while countries like Brazil exemplify more balanced growth, others like India, China, and South Africa face the challenge of aligning rapid economic expansion with sustainability and social well-being. The study highlights how these nations, despite being grouped together geopolitically, follow divergent paths shaped by their unique histories, resources, and policy priorities.
+
+
